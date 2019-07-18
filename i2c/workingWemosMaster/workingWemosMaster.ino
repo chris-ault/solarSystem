@@ -1,6 +1,6 @@
 #include <Wire.h>
 #include <i2cSimpleTransfer.h>
-
+#include "loginCred.c"
 
 #define i2c_sensor_slave 17
 

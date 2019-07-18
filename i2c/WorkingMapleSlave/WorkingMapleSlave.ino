@@ -1,6 +1,6 @@
 #include <Wire_slave.h>
 #include <i2cSimpleTransfer.h>
-#include "..\..\SolarProject\MapleMiniVoltagesPercents\MapleMiniVoltagesPercents.ino"
+#include "..\..\MapleMiniVoltagesPercents\MapleMiniVoltagesPercents.ino"
 /*
     https://github.com/getsurreal/i2cSimpleTransfer
 */
@@ -113,15 +113,17 @@ int activateAC(){
     }
 }
 
-bool deactivateAC(){
+int deactivateAC(){
     if(ac == false){
-        return true;
-    } else {
+        // POST AC is already off
+        return 0;
+    } else if(ac == true){
         // POST turning off AC
         digitalWrite(acPin,LOW);
         ac = false;
-        return true;
+        return 0;
     }
+    return 1;
 }
 
 bool enableAC(){
@@ -175,9 +177,10 @@ int activateInverter(){
         digitalWrite(invSolenoid, HIGH); // Enable Solenoid
         delay(5000); // delay for solenoid click
     digitalWrite(invPreCharge,LOW); // Disable Precharge
+    preChargeComplete = false;
     // POST precharge off
     }
-    return 1;
+    return 0;
 }
 
 int deactivateInverter(){
@@ -186,16 +189,20 @@ int deactivateInverter(){
 }
 
 int sleepInverter(bool wake){
-    if(wake == true){
+    if(wake == true && ac == false){
         // POST "inverter waking from sleep"
         digitalWrite(invPowerPin, Low);
+        return 0;
     } else if (wake == false){
         if(ac == false){
             // POST "inverter going to sleep"
             digitalWrite(invPowerPin, Low);
+            return 0
         } else if (ac == true){
             // AC is on, we need to shut off first
             deactivateAC();
+            return 0;
         }
     }
+    return 1;
 }
