@@ -1,21 +1,26 @@
 #include <Wire_slave.h>
 #include <i2cSimpleTransfer.h>
-#include "..\..\MapleMiniVoltagesPercents\MapleMiniVoltagesPercents.ino"
+#include "C:/Users/Optiplex 9010/Documents/SolarProject/solarSystem/i2c/WorkingMapleSlave/MapleMiniVoltagesPercents/MapleMiniVoltagesPercents.ino"
 /*
     https://github.com/getsurreal/i2cSimpleTransfer
 */
 
 #define i2c_slave_address 17
 
+/* Inverter */
 // Charge Inverter
-#define invPreCharge 6
+#define invPreCharge 19
 // Run Inverter
-#define invSolenoid 7
-// Relay to control AC Output
-#define acPin 8
+#define invSolenoid 20
 // Relay for inverter remote control
-#define invPowerPin 9
+#define invPowerPin 22
 
+/* Air Conditioner */
+// Relay to control AC Output
+#define acPin 21
+
+#define ON LOW
+#define OFF HIGH
 
 // You can add more variables into the struct, but the default limit for transfer size in the Wire library is 32 bytes
 struct SLAVE_DATA {
@@ -33,8 +38,10 @@ SLAVE_CONFIG slave_config;
 
 bool ac;
 bool inverter;
+bool inverterSleepStatus;
 bool preChargeComplete;
 bool batteryStatus;
+
 unsigned long previousMillis = 0;
 const long interval = 1000;  
 
@@ -55,9 +62,18 @@ void setup() {
     preChargeComplete = false;
     batteryStatus = false;
 
-    pinMode(acPin,OUTPUT);
+    /* Inverter */
     pinMode(invPreCharge, OUTPUT);
     pinMode(invSolenoid, OUTPUT);
+    pinMode(invPowerPin, OUTPUT);
+    digitalWrite(invPreCharge, OFF);
+    digitalWrite(invSolenoid, OFF);
+    digitalWrite(invPowerPin, OFF);
+
+    /* Air Condiioner */
+    pinMode(acPin,OUTPUT);
+    digitalWrite(acPin, OFF);
+
     pinMode(bank1, INPUT_ANALOG);
     pinMode(bank2, INPUT_ANALOG);
 
@@ -68,8 +84,26 @@ void loop() {
     unsigned long currentMillis = millis();
     if (currentMillis - previousMillis >= interval) {
         previousMillis = currentMillis;
-        displayVoltages();
+        displayVoltages(0,'v');
     }
+    delay(10000);
+    // Typical Day Demo
+    /* Enable Inverter, Cycle(Enable AC, Disable AC, 
+    sleep inverter), disable inverter*/
+    Serial.println("First call of inverter");
+    activateInverter();
+    delay(5000);
+    for(int i = 0; i < 5; i++){
+        Serial.println(i);
+        enableAC();
+        delay(5000);
+        deactivateAC();
+        delay(5000);
+        sleepInverter(true);
+        delay(5000);
+    }
+    deactivateInverter();
+
 
 }
 
@@ -96,18 +130,21 @@ void receiveEvent (int payload) {
 
 
 /* ===== AC Controls ===== */
-// On under good battery and good sun conditions 
 
+// On under good battery and good sun conditions 
+// Helper function to flip switches after being called by enableAC
 int activateAC(){
     if(inverter == true){
         // Check battery first, need 40% minimum each
         // if(checkBattery(1) > 40 && checkBattery(2) > 40){
         // POST ac on
-        digitalWrite(acPin,HIGH);
+        Serial.println("Enabling AC");
+        digitalWrite(acPin,ON);
         ac = true;
-    } else {
+        return 0;
+    } else if(inverter == false){
         if(activateInverter() == 1 && inverter == true){
-            digitalWrite(acPin,HIGH);
+            digitalWrite(acPin,ON);
             ac = true;
         }
     }
@@ -115,18 +152,19 @@ int activateAC(){
 
 int deactivateAC(){
     if(ac == false){
-        // POST AC is already off
+        // POST AC is already OFF
         return 0;
     } else if(ac == true){
-        // POST turning off AC
-        digitalWrite(acPin,LOW);
+        // POST turning OFF AC
+        Serial.println("Turning AC Off");
+        digitalWrite(acPin,OFF);
         ac = false;
         return 0;
     }
     return 1;
 }
 
-bool enableAC(){
+int enableAC(){
     /*
     Check if AC is on
         -Yes
@@ -141,66 +179,96 @@ bool enableAC(){
 
     */
     if(ac == true){
-        return true;
-    } else {
+        return 0;
+    } else if(ac == false){
         if(inverter == true){
+            // POST AC on
             activateAC();
+            return 0;
         } else {
-            if(activateInverter() == 1){
-                // POST Inverter on
+            Serial.println("AC Called, inverter was off");
+            activateInverter();
+            if(inverter==true){
+                // POST AC on
                 activateAC();
-                return true;
+                return 0;
             } else {
-                // inverter failed to return 1
-                return false;
+                // inverter failed to be on
+                return 1;
             }
+            return 1;
         }
+    return 1;
     }
+    return 1;
 
 }
 
 /* ===== Inverter Controls ===== */
-// On in morning
-// Off at night
+
+// On in morning post sunrise, when voltage is good
+// Off at night post or at sunset
 
 int activateInverter(){
+    Serial.println("Starting inverter");
     // Run PreCharge
     // Delay for balance
     // Run inverter invSolenoid
     preChargeComplete = false;
-    digitalWrite(invPreCharge, HIGH);
+    Serial.println("\n\nTurning ON Pre Charge Circuit");
+    digitalWrite(invPreCharge, ON);
     // POST precharge on
     delay(10000); // Wait for capacitors to charge
     preChargeComplete = true;
+    // Only run if precharge has been done
     if(preChargeComplete == true){
-        // POST ac on
-        digitalWrite(invSolenoid, HIGH); // Enable Solenoid
+        // POST inverter on
+        Serial.println("Turning ON Inverter Main Solenoid Circuit");
+        digitalWrite(invSolenoid, ON); // Enable Solenoid
         delay(5000); // delay for solenoid click
-    digitalWrite(invPreCharge,LOW); // Disable Precharge
+    Serial.println("Turning OFF Inverter Pre Charge Circuit\n\n");
+    digitalWrite(invPreCharge,OFF); // Disable Precharge
     preChargeComplete = false;
-    // POST precharge off
-    }
+    // POST precharge OFF
+    inverter = true;
     return 0;
-}
-
-int deactivateInverter(){
-
+    }
     return 1;
 }
 
-int sleepInverter(bool wake){
-    if(wake == true && ac == false){
-        // POST "inverter waking from sleep"
-        digitalWrite(invPowerPin, Low);
+int deactivateInverter(){
+    if(ac == true){
+        deactivateAC();
+    }
+    // POST inverter full power down
+    Serial.println("Turning OFF Inverter Main Solenoid Circuit");
+    digitalWrite(invSolenoid, OFF); // Disable Solenoid
+    return 0;
+}
+
+int sleepInverter(bool sleep){
+    if(inverterSleepStatus == sleep){
+        Serial.println("Inverter is already asleep");
         return 0;
-    } else if (wake == false){
+    }
+    if(sleep == false && ac == false){
+        // POST "inverter waking from sleep"
+        Serial.println("Inverter wake from sleep");
+        digitalWrite(invPowerPin, OFF); //Enable Low(off)
+        inverterSleepStatus = false;
+        return 0;
+    } else if (sleep == true){
         if(ac == false){
             // POST "inverter going to sleep"
-            digitalWrite(invPowerPin, Low);
-            return 0
+            Serial.println("Inverter going to sleep");
+            digitalWrite(invPowerPin, ON); //Disable High(on)
+            inverterSleepStatus = true;
+            return 0;
         } else if (ac == true){
-            // AC is on, we need to shut off first
+            // AC is on, we need to shut OFF first
+            Serial.println("Inverter: AC was on");
             deactivateAC();
+            sleepInverter(true);
             return 0;
         }
     }
