@@ -4,27 +4,22 @@
 
 #define bank1 3
 #define bank2 4
-bool output1 = 1;
+bool output1 = 0;
 bool outputStats = 0;
 
 Statistic myStats;
 
-/*
-void setup() {
+
+/* void setup() {
   // initialize serial communication at 9600 bits per second:
   Serial.begin(9600);
   pinMode(bank1, INPUT_ANALOG);
   pinMode(bank2, INPUT_ANALOG);
   //myStats.clear(); //explicitly start clean
 
-}
+}*/
 
-void loop() {
 
-  displayVoltages();
-  
-}
-*/
 
 
 
@@ -90,21 +85,17 @@ int ReadBank(int num){
   return sval;
 }
 
-void displayVoltages(int cell, char type){
+double displayVoltages(int cell, char type){
   //cell: 0 is both banks result, 1 is bank 1, 2 is bank 2
   //type: a for analog, v for voltage, p for percent
-
-  if(cell == 1){
-    
-  }
 
     // read the adcs
   int sensorValue1 = ReadBank(bank1);
   int sensorValue2 = ReadBank(bank2);
   
   // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
-  float voltage1 = sensorValue1 * (3.34 / 4095.0) ;
-  float voltage2 = sensorValue2 * (3.27 / 4095.0);
+  double voltage1 = sensorValue1 * (3.34 / 4095.0) ;
+  double voltage2 = sensorValue2 * (3.27 / 4095.0);
 
   // Generate outputs
   String VoltagesR = String(voltage1);
@@ -135,4 +126,67 @@ void displayVoltages(int cell, char type){
     Serial.println("\n\n\n");
     delay(10);
   }
+  if(cell == 1){
+    // Bank 1
+    switch(type){
+      case 'a':
+        return sensorValue1;
+        break;
+      case 'v':
+        return voltage1;
+        break;
+      case 'p':
+        return b1percent;
+        break;
+      default:
+      return 0.0;
+      break;
+    }
+
+  } else if(cell ==2){
+    // Bank 2
+    switch(type){
+      case 'a':
+        return sensorValue2;
+        break;
+      case 'v':
+        return voltage2;
+        break;
+      case 'p':
+        return b2percent;
+        break;
+      default:
+      return 0.0;
+      break;
+    }
+
+  } else if(cell == 0){
+    // Average
+    switch(type){
+      case 'a':
+        return (sensorValue1+sensorValue2)/2.0;
+        break;
+      case 'v':
+        return (voltage1+voltage2);
+        break;
+      case 'p':
+        return b1percent+b2percent/2.0;
+        break;
+      default:
+      return 0.0;
+      break;
+    }
+  }
+}
+
+bool checkPercent (int check){
+  double b1 = displayVoltages(1,'p');
+  double b2 = displayVoltages(2,'p');
+
+  if(b1 <= check || b2 <= check){
+    return false;
+  } else{
+    return true;
+  }
+
 }
