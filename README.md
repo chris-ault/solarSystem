@@ -1,5 +1,4 @@
 # solarSystem
-WiFi Enabled portable AC powered by solar and lithium in deficit. Wemos Esp8266, Maple Mini, BeagleBone Black, i2c, Python, Dash, Sqlalchemy, Sqlite.
 
 Project Layout
 * The Maple Mini and Wemos communicate over a 2 wire i2c interface.
