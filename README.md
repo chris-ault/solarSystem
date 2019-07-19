@@ -22,12 +22,12 @@ https://www.espressif.com/sites/default/files/documentation/0a-esp8266ex_datashe
 
 
 ### Power Supply - Simple Switcher - Buck regulator
-* http://www.ti.com/lit/ds/symlink/lm2596.pdf
+http://www.ti.com/lit/ds/symlink/lm2596.pdf
 * This powers the Wemos and Maple directly from the 24Volts Lithium
 
 
 ## BeagleBone Black
-* https://cdn-shop.adafruit.com/datasheets/BBB_SRM.pdf
+https://cdn-shop.adafruit.com/datasheets/BBB_SRM.pdf
 * 32-Bit MCU, 1Ghz, ARM Cortex A8, RISC, 
 * 2GB EMMC Storage, 512MB RAM
 * CPU:http://www.ti.com/product/AM3358
