@@ -94,8 +94,8 @@ double displayVoltages(int cell, char type){
   int sensorValue2 = ReadBank(bank2);
   
   // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
-  double voltage1 = sensorValue1 * (3.34 / 4095.0) ;
-  double voltage2 = sensorValue2 * (3.27 / 4095.0);
+  double voltage1 = sensorValue1 * (3.353 / 4095.0) ; // 3.34 read 11.19, should have been 11.23, into 3.353
+  double voltage2 = sensorValue2 * (3.280 / 4095.0);  // 3.27 read 10.58 into 3.283 read 10.62, 3.28 reads correct 10.6
 
   // Generate outputs
   String VoltagesR = String(voltage1);
@@ -170,7 +170,7 @@ double displayVoltages(int cell, char type){
         return (voltage1+voltage2);
         break;
       case 'p':
-        return b1percent+b2percent/2.0;
+        return (b1percent+b2percent)/2.0;
         break;
       default:
       return 0.0;
