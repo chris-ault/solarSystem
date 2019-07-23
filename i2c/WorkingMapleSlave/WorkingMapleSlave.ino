@@ -43,8 +43,6 @@ bool inverterSleepStatus;
 bool preChargeComplete;
 bool batteryStatus;
 
-unsigned long previousMillis = 0;
-const long interval = 1000;  
 
 void setup() {
     // i2c communication
@@ -81,6 +79,10 @@ void setup() {
 
 }
 
+
+unsigned long previousMillis = 0;
+const long interval = 30000;  
+
 void loop() {
 
     //Serial << "Average Analog " << displayVoltages(0,'a') << endl;
@@ -95,16 +97,26 @@ void loop() {
     //Serial << "Bank 2 Voltage " << displayVoltages(2,'v') << endl;
     //Serial << "Bank 2 Percent " << displayVoltages(2,'p') << endl;
 
-    // unsigned long currentMillis = millis();
-    // if (currentMillis - previousMillis >= interval) {
-    //     previousMillis = currentMillis;
-    //     displayVoltages(0,'v');
-    // }
+     unsigned long currentMillis = millis();
+     if (currentMillis - previousMillis >= interval) {
+         previousMillis = currentMillis;
+         Serial << "Total Voltage " << displayVoltages(0,'v') << endl;
+         Serial << "Average Percent " << displayVoltages(0,'p') << endl << endl;
+         Serial << "Bank 1 Voltage " << displayVoltages(1,'v') << endl;
+         Serial << "Bank 1 Percent " << displayVoltages(1,'p') << endl;
+         Serial << "Bank 2 Voltage " << displayVoltages(2,'v') << endl;
+         Serial << "Bank 2 Percent " << displayVoltages(2,'p') << endl << endl;
+     }
 
-    delay(10000);
+
     // Typical Day Demo
-    /* Enable Inverter, Cycle(Enable AC, Disable AC, 
-    sleep inverter), disable inverter*/
+    /*
+    
+    Enable Inverter, Cycle(Enable AC, Disable AC, 
+    sleep inverter), disable inverter 
+    
+    */
+    /*
     Serial << "Precharge Complete:" << preChargeComplete << " Inverter:" << inverter << " inverter sleep:" << inverterSleepStatus << " AC:" << ac;
     Serial.println("\nFirst call of inverter");
     activateInverter();
@@ -119,6 +131,7 @@ void loop() {
         delay(5000);
     }
     deactivateInverter();
+    */
 
 
 }
