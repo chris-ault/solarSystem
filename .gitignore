@@ -4,3 +4,4 @@ i2c/WorkingMapleSlave/.vscode/*
 i2c/workingWemosMaster/.vscode/*
 pythonDash/*
 !pythonDash/weather.py
+i2c/workingWemosMaster/loginCred.h

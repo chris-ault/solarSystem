@@ -1,8 +1,9 @@
 #include <ModbusMaster.h>
 #include <ESP8266WiFi.h>
-    
 
-const int debug = 1; //change to 0 when you are finished debugging
+extern char ssid[] ;
+extern char pass[] ; 
+extern const int debug = 1; //change to 0 when you are finished debugging
     
 // instantiate ModbusMaster object
 ModbusMaster node;
@@ -59,28 +60,81 @@ void loop(){
   readController();
 } */
 
-
-void readController()
-{
-  bool rs485DataReceived = true;
-  int numLoops = 10000;
-
-  uint8_t result,time1, time2, time3, date1, date2, date3, dateDay, dateMonth, dateYear, timeHour, timeMinute, timeSecond;
-  // uint16_t data[6];
-  char buf[10];
-  char bufDate[10];
-  String dtString;
-  float bvoltage, ctemp, btemp, bremaining, lpower, lcurrent, pvvoltage, pvcurrent, pvpower;
-
-  if (debug == 1){
-    Serial.print("Beginning Loop ");
-    Serial.println(numLoops);
+String getTime() {
+  WiFiClient client;
+  int numRetries = 0;
+  while ((!!!client.connect("google.com", 80)) & (numRetries<10)) {
+    Serial.println("connection failed, retrying...");
+    if (WiFi.status() != WL_CONNECTED)
+    {
+      if (debug == 1){
+        Serial.print("Reconnecting WiFi...");
+      }
+      WiFi.begin(ssid, pass);
+      while (WiFi.status() != WL_CONNECTED)
+      {
+        if (debug == 1){
+          Serial.print(".");
+        }
+        delay(500);
+      }
+    }
+    
+    numRetries++;
+  }
+  
+  if (numRetries==10){
+    numRetries=0;
+    while ((!!!client.connect("time.is", 80)) & (numRetries<10)) {
+      Serial.println("connection failed, retrying...");
+      if (WiFi.status() != WL_CONNECTED)
+      {
+        if (debug == 1){
+          Serial.print("Reconnecting WiFi...");
+        }
+        WiFi.begin(ssid, pass);
+        while (WiFi.status() != WL_CONNECTED)
+        {
+          if (debug == 1){
+            Serial.print(".");
+          }
+          delay(500);
+        }
+      }
+      
+      numRetries++;
+    }
   }
 
-//Get Date and Time, and update Controller Data and Time  IN UTC, Day,Month,Year
+  client.print("HEAD / HTTP/1.1\r\n\r\n");
+ 
+  while(!!!client.available()) {
+     yield();
+  }
 
-  if (numLoops == 10000){ // Get date and time every 10000 loops
+  while(client.available()){
+    if (client.read() == '\n') {    
+      if (client.read() == 'D') {    
+        if (client.read() == 'a') {    
+          if (client.read() == 't') {    
+            if (client.read() == 'e') {    
+              if (client.read() == ':') {    
+                client.read();
+                String theDate = client.readStringUntil('\r');
+                client.stop();
+                return theDate;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
 
+void updateTime(){
+      String dtString;
+      uint8_t result, dateDay, dateMonth, dateYear, timeHour, timeMinute, timeSecond;
       dtString = getTime();
       /*if (debug == 1){
         //Serial.println(dtString);
@@ -150,7 +204,29 @@ void readController()
       node.setTransmitBuffer(1,(dateDay<<8)|timeHour);
       node.setTransmitBuffer(2,(dateYear<<8)|dateMonth);
       result = node.writeMultipleRegisters(0x9013,3);
+}
 
+String readController()
+{
+  bool rs485DataReceived = true;
+  int numLoops = 10000;
+
+  uint8_t result,time1, time2, time3, date1, date2, date3;
+  // uint16_t data[6];
+  char buf[10];
+  char bufDate[10];
+  float bvoltage, ctemp, btemp, bremaining, lpower, lcurrent, pvvoltage, pvcurrent, pvpower;
+
+  if (debug == 1){
+    Serial.print("Beginning Loop ");
+    Serial.println(numLoops);
+  }
+
+//Get Date and Time, and update Controller Data and Time  IN UTC, Day,Month,Year
+
+  if (numLoops == 10000){ // Get date and time every 10000 loops
+
+    updateTime();
       numLoops = 0;
       
   }   //End of get date and time
@@ -275,30 +351,30 @@ void readController()
      
       // field 1 - 8 is setup in thingspeak
 
-      String url = "/update";
-        url += "&field1=";
+      String url = "";
+        url += "";
         url += bvoltage;
-        url += "&field2=";
+        url += ",";
         url += bremaining;
-        url += "&field3=";
+        url +=",";
         url += lcurrent;
-        url += "&field4=";
+        url += ",";
         url += lpower;
-        url += "&field5=";
+        url += ",";
         url += pvvoltage;
-        url += "&field6=";
+        url += ",";
         url += pvcurrent;
-        url += "&field7=";
+        url += ",";
         url += pvpower;  
-        url += "&field8=";
+        url += ",";
         url += ctemp;
         
         if (debug == 1){
           Serial.print("Requesting URL: ");
-          Serial.println(url);
+          //Serial.println(url);
         }
         
-
+  return url;
   }
   numLoops++;
   
@@ -309,7 +385,7 @@ void readController()
     if (debug == 1){
       Serial.print("Reconnecting WiFi...");
     }
-    WiFi.begin(ssid, password);
+    WiFi.begin(ssid, pass);
     while (WiFi.status() != WL_CONNECTED)
     {
       if (debug == 1){
@@ -321,74 +397,4 @@ void readController()
   
 } //end Loop
 
-String getTime() {
-  WiFiClient client;
-  int numRetries = 0;
-  while ((!!!client.connect("google.com", 80)) & (numRetries<10)) {
-    Serial.println("connection failed, retrying...");
-    if (WiFi.status() != WL_CONNECTED)
-    {
-      if (debug == 1){
-        Serial.print("Reconnecting WiFi...");
-      }
-      WiFi.begin(ssid, password);
-      while (WiFi.status() != WL_CONNECTED)
-      {
-        if (debug == 1){
-          Serial.print(".");
-        }
-        delay(500);
-      }
-    }
-    
-    numRetries++;
-  }
-  
-  if (numRetries==10){
-    numRetries=0;
-    while ((!!!client.connect("time.is", 80)) & (numRetries<10)) {
-      Serial.println("connection failed, retrying...");
-      if (WiFi.status() != WL_CONNECTED)
-      {
-        if (debug == 1){
-          Serial.print("Reconnecting WiFi...");
-        }
-        WiFi.begin(ssid, password);
-        while (WiFi.status() != WL_CONNECTED)
-        {
-          if (debug == 1){
-            Serial.print(".");
-          }
-          delay(500);
-        }
-      }
-      
-      numRetries++;
-    }
-  }
 
-  client.print("HEAD / HTTP/1.1\r\n\r\n");
- 
-  while(!!!client.available()) {
-     yield();
-  }
-
-  while(client.available()){
-    if (client.read() == '\n') {    
-      if (client.read() == 'D') {    
-        if (client.read() == 'a') {    
-          if (client.read() == 't') {    
-            if (client.read() == 'e') {    
-              if (client.read() == ':') {    
-                client.read();
-                String theDate = client.readStringUntil('\r');
-                client.stop();
-                return theDate;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
