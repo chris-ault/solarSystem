@@ -1,45 +1,13 @@
 #include <Wire.h>
 #include <i2cSimpleTransfer.h>
 #include "loginCred.h"
+#include "../slaveProtocol.h"
 #include "C:/Users/Optiplex 9010/Documents/SolarProject/solarSystem/EPsolar_Data_comms/modbus_over_serial.ino"
 #define i2c_sensor_slave 17
 /*
     https://github.com/getsurreal/i2cSimpleTransfer
 */
 
-// May return odd sizing returns https://github.com/esp8266/Arduino/issues/1825
-// Wemos library is using a 128 byte limit
-struct SLAVE_DATA { // Can hold 32 x 4 byte floats(maple), only need 4 digits
-    float voltageSolar;
-    float voltageBatt;
-    float currentSolar;
-    float currentLoad;
-    float powerSolar;
-    float powerLoad;
-    float temperatureCont;
-    float temperatureBatt;
-    float batremain;
-};
-/* Data fields
--------------------------------
-    Controller Temperature
-    
-    Battery Voltage
-    Battery Percent Remaining
-    Battery Temperature
-    
-    Solar Voltage
-    Solar Current
-    Solar Power
-
-    Load Power
-    Load Current
-*/
-
-
-struct SLAVE_CONFIG {
-    char val[3];
-};
 
 SLAVE_DATA slave_data;
 SLAVE_CONFIG slave_config;

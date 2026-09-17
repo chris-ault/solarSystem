@@ -2,6 +2,7 @@
 #include <Wire_slave.h>
 #include <i2cSimpleTransfer.h>
 // Edited BUFFER_LENGTH  = 128 @ \Arduino\hardware\Arduino_STM32\STM32F1\libraries\Wire\utility\WireBase.h 
+#include "../slaveProtocol.h"
 #include "C:/Users/Optiplex 9010/Documents/SolarProject/solarSystem/i2c/WorkingMapleSlave/MapleMiniVoltagesPercents/MapleMiniVoltagesPercents.ino"
 /*
     https://github.com/getsurreal/i2cSimpleTransfer
@@ -24,29 +25,6 @@
 #define ON LOW
 #define OFF HIGH
 
-// You can add more variables into the struct, but the default limit for transfer size in the Wire library is 32 bytes
-/*
-struct SLAVE_DATA {
-    // uint16_t maxvalue = 65501
-    uint16_t value1;     // use specific declarations to ensure communication between 16bit and 32bit controllers
-    uint16_t value2 = 1;
-};
-*/
-struct SLAVE_DATA { // Can hold 32 x 4 byte floats(maple), only need 4 digits
-    float voltageSolar;
-    float voltageBatt;
-    float currentSolar;
-    float currentLoad;
-    float powerSolar;
-    float powerLoad;
-    float temperatureCont;
-    float temperatureBatt;
-    float batremain;
-};
-
-struct SLAVE_CONFIG {
-    char val[3];
-};
 
 SLAVE_DATA slave_data;
 SLAVE_CONFIG slave_config;

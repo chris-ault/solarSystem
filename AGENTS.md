@@ -82,10 +82,12 @@ load-control relays (inverter, air conditioner).
 - Both i2c sketches `#include` sibling sketches by absolute Windows path
   (`C:/Users/Optiplex 9010/...`); they will not build elsewhere until those
   paths are fixed locally.
-- Protocol mismatch: the Wemos `SLAVE_DATA` declares 9 floats but the Maple's
-  holds 2×uint16_t, and the Wemos loop reads `slave_data.value1`, which its
-  own struct does not define. Re-sync the two structs before trusting the I2C
-  path.
+- The I2C wire structs now live in one shared header, `i2c/slaveProtocol.h`,
+  included by both sketches. Historically each sketch declared its own
+  `SLAVE_DATA` copy; the copies drifted (9 floats pasted over the 2×uint16
+  struct `requestEvent` actually used) and neither sketch compiled. Do not
+  declare protocol structs locally — extend the header and reflash both
+  firmwares.
 - `loginCred.c` is a tracked placeholder with dummy WiFi credentials; real
   credentials go in the gitignored `loginCred.h`.
 - Unplug the RS485 adapter from the ESP while flashing — it shares the serial
@@ -95,7 +97,7 @@ load-control relays (inverter, air conditioner).
 
 - Maple Mini (slave) and Wemos (master) share a 2-wire I2C link; the shared
   buffer is 128 bytes. Changing the protocol or buffer size requires updating
-  both firmwares.
+  the structs in `i2c/slaveProtocol.h` and reflashing BOTH firmwares.
 - Arduino sketches (.ino) are built/uploaded with the Arduino IDE or
   arduino-cli; no Makefile here.
 - `.entire/` and `.pi/` are agent tooling config — keep them tracked, and keep
