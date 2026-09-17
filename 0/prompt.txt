@@ -1,13 +1,1 @@
-this is a restarted omp session now I ran session list and it was empty
-
----
-
-Lets talk about this repo as an architect level discussion does this have any potential value?
-
----
-
-Explains why me as a fresh college student struggled to produce this level of work
-
----
-
 Lets make the shared header fix and commit it
