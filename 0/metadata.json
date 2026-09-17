@@ -1,0 +1,40 @@
+{
+  "cli_version": "0.10.6",
+  "checkpoint_id": "01M2RQZH3NFV316Y1CCQEA01TD",
+  "session_id": "01a0b159-9d81-73d2-9d49-37c77fc492e7",
+  "strategy": "manual-commit",
+  "created_at": "2026-09-17T22:32:16.346249Z",
+  "branch": "master",
+  "checkpoints_count": 3,
+  "files_touched": [
+    "i2c/slaveProtocol.h"
+  ],
+  "agent": "Oh My Pi",
+  "model": "z-ai/glm-5.3-flash",
+  "turn_id": "83de9f0feeee",
+  "compact_transcript_start": 0,
+  "session_metrics": {
+    "turn_count": 3
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-09-17T22:32:16.299428Z",
+    "agent_lines": 33,
+    "agent_removed": 0,
+    "human_added": 9,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 42,
+    "total_lines_changed": 103,
+    "agent_percentage": 32.038834951456316,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    }
+  ]
+}
